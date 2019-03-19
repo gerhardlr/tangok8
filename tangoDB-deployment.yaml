@@ -1,0 +1,89 @@
+
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: tango-facility
+  labels:
+    app: tango-facility
+spec:
+  selector:
+    matchLabels:
+      app: tango-facility
+      role: master
+      tier: tango-infra
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tango-facility
+        role: master
+        tier: tango-infra
+    spec:
+      volumes:
+       - name: shared-data
+         emptyDir: {}
+      containers:
+      - name: tangodb
+        image: ska-registry.av.it.pt/ska-docker/tango-db
+        imagePullPolicy: Never #delete this to ensure image is pulled from network
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: secret
+          - name: MYSQL_DATABASE
+            value: tango
+          - name: MYSQL_USER
+            value: tango
+          - name: MYSQL_PASSWORD
+            value: tango
+          - name: GET_HOSTS_FROM
+            value: dns
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+          - name: shared-data
+            mountPath: /var/run/mysqld/
+      - name: databaseds
+        image: ska-registry.av.it.pt/ska-docker/tango-cpp
+      #  command:
+      #   - tail 
+      #  args:
+      #    - -f
+      #    - /dev/null
+        command:
+          - /usr/local/bin/wait-for-it.sh
+        args:
+          - localhost:3306
+          - --timeout=30
+          - --strict
+          - --
+          - /usr/local/bin/DataBaseds
+          - "2"
+          - -ORBendPoint
+          - giop:tcp::10000
+        imagePullPolicy: Never #delete this to ensure image is pulled from network
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+          - name: MYSQL_HOST
+            value: localhost:3306 
+          - name: MYSQL_DATABASE
+            value: tango
+          - name: MYSQL_USER
+            value: tango
+          - name: TANGO_HOST
+            value: databaseds:10000 
+          - name: MYSQL_PASSWORD
+            value: tango
+        volumeMounts:
+          - name: shared-data
+            mountPath: /var/run/mysqld/
+        ports:
+        - containerPort: 10000
+
+

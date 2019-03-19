@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: databaseds
+  labels:
+    app: databaseds
+    role: master
+    tier: tango-infra
+spec:
+  ports:
+  - port: 10000
+    targetPort: 10000
+  selector:
+    app: tango-facility
+    role: master
+    tier: tango-infra
