@@ -5,4 +5,4 @@ kubectl create -f .
 <h2>set down</h2>
 kubectl delete -f .
 <h2>deployment diagram</h2>
-<img!atl="image" src = "deployment.jpg">
+<img!alt="image" src ="Deployment.jpg">
